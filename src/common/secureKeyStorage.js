@@ -3,10 +3,11 @@ const Crypto = require("crypto");
 
 module.exports = {
   store: async (guid, key) => {
-    return module.exports.storeToDb(guid, key);
+    return await module.exports.storeToDb(guid, JSON.stringify(key));
   },
   retrieve: async (guid) => {
-    return module.exports.retrieveFromDb(guid);
+    const keyString = await module.exports.retrieveFromDb(guid);
+    return JSON.parse(keyString);
   },
 
   storeToDb: async (guid, key) => {

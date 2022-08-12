@@ -15,7 +15,7 @@ var OAuthUserSchema = new mongoose.Schema({
   phoneNumber: String,
   oneTimeCode: Number,
   didAddress: String,
-  didPublicEncryptionKey: String,
+  didPublicEncryptionKey: mongoose.Schema.Types.Mixed,
   didPrivateKeyGuid: String,
   oneTimeCodeIssueDate: Date,
   loginTypes: [{ type: mongoose.Schema.Types.ObjectId, ref: "LoginTypeBase" }],
