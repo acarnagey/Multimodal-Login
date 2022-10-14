@@ -12,9 +12,9 @@ import crypto from "crypto";
 import Key from "./models/Key";
 import TextLoginType from "./models/login-type/TextLoginType";
 import SecurityQuestionsLoginType from "./models/login-type/SecurityQuestionsLoginType";
-// import Web3 from "web3";
+import Web3 from "web3";
 import secureKeyStorage from "../common/secureKeyStorage";
-// import EthCrypto from "eth-crypto";
+import EthCrypto from "eth-crypto";
 import SocialSupportType from "./models/login-type/SocialSupportType";
 import * as SidetreeWallet from "@sidetree/wallet";
 
@@ -22,7 +22,7 @@ import * as SidetreeWallet from "@sidetree/wallet";
 // const EthCrypto = require("eth-crypto");
 // const common = require("../common/common");
 
-// const web3 = new Web3();
+const web3 = new Web3();
 const REQUIRED_PASSWORDS = 1;
 
 let mongoDbOptions = {
@@ -84,14 +84,18 @@ class MongoDbClient {
   }
 
   async createNewDID() {
-    const crv = "Ed25519";
-    const path = "m/44'/1'/0'/0/0";
+    const crv = "secp256k1";
+    const path = "m/44'/60'/0'/0/0";
     const mnemonic = await SidetreeWallet.toMnemonic();
     const keyPair = await SidetreeWallet.toKeyPair(mnemonic.value, crv, path);
+    const kp = await didKey.secp256k1.Secp256k1KeyPair.from(keyPair);
+    const privateKey = Buffer.from(kp.privateKey).toString('hex');
+    const publicKey = Buffer.from(kp.publicKey).toString('hex');
+    const address = publicKeyToAddress(publicKey);
     let did = {
-      address: keyPair.controller.split("did:key:")[1],
-      privateKey: keyPair.privateKeyJwk,
-      publicKey: keyPair.publicKeyJwk,
+      address,
+      privateKey,
+      publicKey,
     };
     return did;
     // const account = web3.eth.accounts.create();
@@ -649,20 +653,19 @@ class MongoDbClient {
   };
 
   validByok = function (publicAddress, signature, userPublicAddress) {
-    return false;
-    // const signer = EthCrypto.recover(
-    //   signature,
-    //   EthCrypto.hash.keccak256(publicAddress) // signed message hash
-    // );
+    const signer = EthCrypto.recover(
+      signature,
+      EthCrypto.hash.keccak256(publicAddress) // signed message hash
+    );
 
-    // if (
-    //   signer !== undefined &&
-    //   signer.toLowerCase() === userPublicAddress.toLowerCase()
-    // ) {
-    //   return true;
-    // } else {
-    //   return false;
-    // }
+    if (
+      signer !== undefined &&
+      signer.toLowerCase() === userPublicAddress.toLowerCase()
+    ) {
+      return true;
+    } else {
+      return false;
+    }
   };
 
   getSecretSaltHash = function (password) {
